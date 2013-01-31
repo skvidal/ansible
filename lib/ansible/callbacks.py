@@ -278,10 +278,11 @@ class CliRunnerCallbacks(DefaultRunnerCallbacks):
 class PlaybookRunnerCallbacks(DefaultRunnerCallbacks):
     ''' callbacks used for Runner() from /usr/bin/ansible-playbook '''
 
-    def __init__(self, stats, verbose=utils.VERBOSITY):
+    def __init__(self, stats, verbose=utils.VERBOSITY, record=None):
         self.verbose = verbose
         self.stats = stats
         self._async_notified = {}
+        self.record = record
 
     def on_unreachable(self, host, results):
         item = None
@@ -296,6 +297,7 @@ class PlaybookRunnerCallbacks(DefaultRunnerCallbacks):
 
     def on_failed(self, host, results, ignore_errors=False):
 
+        self._on_any(host, results)
         results2 = results.copy()
         results2.pop('invocation', None)
 
@@ -328,7 +330,9 @@ class PlaybookRunnerCallbacks(DefaultRunnerCallbacks):
 
     def on_ok(self, host, host_result):
         item = host_result.get('item', None)
-
+        
+        self._on_any(host, host_result)
+        
         host_result2 = host_result.copy()
         host_result2.pop('invocation', None)
         changed = host_result.get('changed', False)
@@ -404,6 +408,9 @@ class PlaybookRunnerCallbacks(DefaultRunnerCallbacks):
         print stringc(msg, 'red')
         super(PlaybookRunnerCallbacks, self).on_async_failed(host,res,jid)
 
+    def _on_any(self, host, host_result):
+        if self.record is not None:
+            utils.write_tree_file(self.record, host, utils.jsonify(host_result,format=True))
 
 ########################################################################
 

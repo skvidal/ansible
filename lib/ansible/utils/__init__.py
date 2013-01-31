@@ -129,7 +129,7 @@ def write_tree_file(tree, hostname, buf):
     # TODO: might be nice to append playbook runs per host in a similar way
     # in which case, we'd want append mode.
     path = os.path.join(tree, hostname)
-    fd = open(path, "w+")
+    fd = open(path, "a+")
     fd.write(buf)
     fd.close()
 
